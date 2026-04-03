@@ -1,0 +1,88 @@
+{
+  "maxPositions": 3,
+  "maxDeployAmount": 50,
+  "deployAmountSol": 0.5,
+  "positionSizePct": 0.35,
+  "gasReserve": 0.2,
+
+  "screening": {
+    "minFeeActiveTvlRatio": 0.05,
+    "minTvl": 10000,
+    "maxTvl": 150000,
+    "minVolume": 500,
+    "minOrganic": 60,
+    "minHolders": 500,
+    "minMcap": 150000,
+    "maxMcap": 10000000,
+    "minBinStep": 80,
+    "maxBinStep": 125,
+    "blockedLaunchpads": ["pump.fun", "letsbonk.fun"],
+    "maxBotHoldersPct": 30,
+    "maxTop10Pct": 60
+  },
+
+  "management": {
+    "minClaimAmount": 5,
+    "outOfRangeBinsToClose": 10,
+    "outOfRangeWaitMinutes": 30,
+    "stopLossPct": -50,
+    "takeProfitFeePct": 5,
+    "minFeePerTvl24h": 7,
+    "trailingTakeProfit": true,
+    "trailingTriggerPct": 3,
+    "trailingDropPct": 1.5
+  },
+
+  "learning": {
+    "minPositionsToEvolve": 10,
+    "evolutionStrength": 0.1,
+    "memoryRetentionDays": 90,
+    "reinforcement": {
+      "winReward": 1.0,
+      "lossPenalty": -1.5,
+      "drawReward": 0.2
+    }
+  },
+
+  "intelligence": {
+    "sources": {
+      "x": {
+        "enabled": true,
+        "trackedAccounts": [],
+        "minMentions": 3
+      },
+      "discord": {
+        "enabled": true,
+        "channelIds": []
+      },
+      "smartMoney": {
+        "enabled": true,
+        "minProfitability": "5%",
+        "trackTopN": 20
+      },
+      "kol": {
+        "enabled": true,
+        "trackedWallets": []
+      }
+    },
+    "signalFusion": {
+      "requireAtLeast": 2,
+      "confidenceThreshold": 0.7,
+      "decayRate": 0.95
+    }
+  },
+
+  "schedule": {
+    "managementIntervalMin": 10,
+    "screeningIntervalMin": 30,
+    "intelligenceRefreshMin": 15,
+    "briefingHour": 1,
+    "timezone": "UTC"
+  },
+
+  "llm": {
+    "temperature": 0.3,
+    "maxTokens": 4096,
+    "maxSteps": 20
+  }
+}

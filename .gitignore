@@ -1,0 +1,12 @@
+node_modules/
+data/
+*.log
+.env
+user-config.json
+strategy-library.json
+state.json
+memory.json
+.DS_Store
+.vscode/
+.idea/
+*.DS_Store

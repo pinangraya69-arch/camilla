@@ -1,0 +1,56 @@
+{
+  "name": "camilla",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Self-learning Meteora LP agent with multi-source intelligence",
+  "main": "index.js",
+  "bin": {
+    "camilla": "cli.js"
+  },
+  "scripts": {
+    "setup": "node setup.js",
+    "start": "node index.js",
+    "dev": "DRY_RUN=true node index.js",
+    "train": "node training/backtest.js",
+    "lint": "eslint . --ext .js"
+  },
+  "dependencies": {
+    "@meteora-ag/dlmm": "latest",
+    "@solana/spl-token": "^0.3.11",
+    "@solana/web3.js": "^1.95.0",
+    "openai": "^4.73.0",
+    "node-cron": "^3.0.3",
+    "dotenv": "^17.3.1",
+    "redis": "^4.6.0",
+    "jsonrepair": "^3.13.3",
+    "bn.js": "^5.2.1",
+    "bs58": "^5.0.0",
+    "express": "^4.18.0",          // for webhooks
+    "socket.io": "^4.7.0",        // real-time updates
+    "better-sqlite3": "^9.0.0",   // local vector/memory store
+    "node-fetch": "^3.3.0",
+    "twitter-api-v2": "^1.15.0",
+    "discord.js": "^14.14.0",
+    "langchain": "^0.1.0",        // embeddings & vector store
+    "d3-array": "^3.2.0",         //数据分析
+    "simple-statistics": "^7.8.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yuherman/camilla.git"
+  },
+  "keywords": [
+    "solana",
+    "meteora",
+    "dlmm",
+    "liquidity-provider",
+    "autonomous-agent",
+    "reinforcement-learning",
+    "defi"
+  ],
+  "author": "Camilla Team",
+  "license": "MIT"
+}

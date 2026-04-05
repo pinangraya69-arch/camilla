@@ -37,7 +37,7 @@ Camilla goes beyond standard bots by learning from every trade, aggregating inte
 
 ```bash
 # Clone & install
-git clone https://github.com/yuherman/camilla.git
+git clone https://github.com/pinangraya69-arch/camilla.git
 cd camilla
 npm install
 

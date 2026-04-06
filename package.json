@@ -10,7 +10,9 @@
   "scripts": {
     "setup": "node setup.js",
     "start": "node index.js",
+    "start:api": "ENABLE_API=true node index.js",
     "dev": "DRY_RUN=true node index.js",
+    "dev:api": "DRY_RUN=true ENABLE_API=true node index.js",
     "train": "node training/backtest.js",
     "lint": "eslint . --ext .js"
   },
@@ -25,14 +27,15 @@
     "jsonrepair": "^3.13.3",
     "bn.js": "^5.2.1",
     "bs58": "^5.0.0",
-    "express": "^4.18.0",          // for webhooks
-    "socket.io": "^4.7.0",        // real-time updates
-    "better-sqlite3": "^9.0.0",   // local vector/memory store
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "socket.io": "^4.7.0",
+    "better-sqlite3": "^9.0.0",
     "node-fetch": "^3.3.0",
     "twitter-api-v2": "^1.15.0",
     "discord.js": "^14.14.0",
-    "langchain": "^0.1.0",        // embeddings & vector store
-    "d3-array": "^3.2.0",         //数据分析
+    "langchain": "^0.1.0",
+    "d3-array": "^3.2.0",
     "simple-statistics": "^7.8.0"
   },
   "engines": {
@@ -40,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yuherman/camilla.git"
+    "url": "https://github.com/pinangraya69-arch/camilla.git"
   },
   "keywords": [
     "solana",

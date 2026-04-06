@@ -21,6 +21,8 @@ export class IntelligenceCollector {
     };
     this.signalCache = [];
     this.lastRefresh = null;
+    this.MAX_CACHE_SIZE = 1000; // Prevent unbounded growth
+    this.MAX_SIGNAL_AGE_HOURS = 24; // Auto-evict signals older than this
   }
 
   async refreshAll() {
@@ -59,8 +61,8 @@ export class IntelligenceCollector {
       sig.confidence *= Math.pow(decayRate, ageHours);
     }
 
-    // Remove low confidence signals
-    this.signalCache = this.signalCache.filter(s => s.confidence > 0.1);
+    // Remove low confidence & expired signals, then enforce max size
+    this.cleanupCache(now);
 
     // Add new signals (dedup by token + source + type)
     for (const ns of newSignals) {
@@ -74,6 +76,24 @@ export class IntelligenceCollector {
         ns.timestamp = now;
         this.signalCache.push(ns);
       }
+    }
+
+    // Enforce max size after adding (LRU: remove oldest)
+    if (this.signalCache.length > this.MAX_CACHE_SIZE) {
+      this.signalCache.sort((a, b) => b.timestamp - a.timestamp); // newest first
+      this.signalCache = this.signalCache.slice(0, this.MAX_CACHE_SIZE);
+    }
+
+    logger.debug(`Signal cache: ${this.signalCache.length} entries after merge`);
+  }
+
+  cleanupCache(now = Date.now()) {
+    const cutoff = now - this.MAX_SIGNAL_AGE_HOURS * 60 * 60 * 1000;
+    const before = this.signalCache.length;
+    this.signalCache = this.signalCache.filter(s => s.confidence > 0.1 && s.timestamp > cutoff);
+    const removed = before - this.signalCache.length;
+    if (removed > 0) {
+      logger.debug(`Cleaned ${removed} stale/low-confidence signals`);
     }
   }
 

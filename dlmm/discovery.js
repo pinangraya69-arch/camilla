@@ -6,6 +6,26 @@ import { Config } from "../config/index.js";
 
 const POOL_DISCOVERY_BASE = "https://pool-discovery-api.datapi.meteora.ag";
 
+/**
+ * With exponential backoff for retries
+ */
+async function fetchWithRetry(url, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      }
+      return await res.json();
+    } catch (err) {
+      if (attempt === maxRetries) throw err;
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 500;
+      console.warn(`Retry ${attempt}/${maxRetries} for ${url} after ${delay.toFixed(0)}ms: ${err.message}`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
 export async function discoverPools({ page_size = 50, timeframe = "5m", category = "trending" } = {}) {
   const config = Config.load();
 
@@ -33,13 +53,7 @@ export async function discoverPools({ page_size = 50, timeframe = "5m", category
     `&timeframe=${timeframe}` +
     `&category=${category}`;
 
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error(`Pool Discovery API error: ${res.status} ${res.statusText}`);
-  }
-
-  const data = await res.json();
+  const data = await fetchWithRetry(url, 3, 1000);
   return {
     total: data.total,
     pools: data.data || [],

@@ -18,11 +18,47 @@ import { TelegramBot } from "./utils/telegram.js";
 import { generateBriefing } from "./utils/briefing.js";
 import { StateManager } from "./core/memory.js";
 
+// Validate critical environment variables on startup
+function validateEnv() {
+  const required = [];
+  if (!process.env.WALLET_PRIVATE_KEY) required.push("WALLET_PRIVATE_KEY");
+  if (!process.env.RPC_URL && !process.env.HELIUS_API_KEY) required.push("RPC_URL or HELIUS_API_KEY");
+  if (!process.env.LLM_API_KEY && !process.env.OPENROUTER_API_KEY) required.push("LLM_API_KEY");
+  
+  if (required.length > 0) {
+    console.error(`❌ Missing required environment variables: ${required.join(", ")}`);
+    console.error("   Please check your .env file and ensure all required variables are set.");
+    process.exit(1);
+  }
+}
+
+validateEnv();
+
 const logger = new Logger("CAMILLA");
 const config = Config.load();
 const learning = new LearningEngine();
 const intelligence = new IntelligenceCollector();
 const state = new StateManager();
+
+// Optional API server
+let apiServer = null;
+let apiModule = null;
+
+async function startAPIServerIfEnabled() {
+  if (process.env.API_PORT || process.env.ENABLE_API === "true") {
+    try {
+      apiModule = await import("./api-server.js");
+      apiServer = await apiModule.startAPIServer();
+      logger.info(`API server started on port ${process.env.API_PORT || 3001}`);
+      return apiServer;
+    } catch (err) {
+      logger.error("Failed to start API server:", err.message);
+      // Continue without API server
+      return null;
+    }
+  }
+  return null;
+}
 
 // ═══════════════════════════════════════════
 //  COORDINATOR — CRON ORCHESTRATION
@@ -362,6 +398,9 @@ async function main() {
   await state.connect();
   await learning.connect();
 
+  // Start API server if enabled (for frontend dashboard)
+  await startAPIServerIfEnabled();
+
   // Load state
   const positions = await getMyPositions();
   const balance = await getWalletBalances();
@@ -375,6 +414,36 @@ async function main() {
     startREPL();
   }
 }
+
+// Graceful shutdown
+async function shutdown(signal) {
+  logger.info(`Received ${signal} — shutting down gracefully...`);
+  
+  // Stop coordinator cycles
+  coordinator.stop();
+  
+  // Flush pending file writes
+  state.flushAll();
+  
+  // Close database connection
+  learning.disconnect();
+  
+  // Stop API server if running
+  if (apiServer) {
+    await new Promise(resolve => {
+      apiServer.close(() => {
+        logger.info("API server closed");
+        resolve();
+      });
+    });
+  }
+  
+  logger.info("Shutdown complete");
+  process.exit(0);
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
 
 function startREPL() {
   const rl = readline.createInterface({
@@ -434,19 +503,6 @@ function formatCountdown(seconds) {
   const s = Math.floor(seconds % 60);
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
-
-// Graceful shutdown
-process.on("SIGINT", () => {
-  logger.info("Shutting down...");
-  coordinator.stop();
-  process.exit(0);
-});
-
-process.on("SIGTERM", () => {
-  logger.info("Terminated...");
-  coordinator.stop();
-  process.exit(0);
-});
 
 // Start
 if (require.main === module) {

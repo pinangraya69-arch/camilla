@@ -29,6 +29,14 @@ export class LearningEngine {
     logger.info("Connected to learning database");
   }
 
+  disconnect() {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+      logger.info("Learning database connection closed");
+    }
+  }
+
   initializeSchema() {
     // Episodes table
     this.db.exec(`

@@ -12,6 +12,11 @@ export class StateManager {
   constructor() {
     this.state = null;
     this.memory = null;
+    this.lastStateSave = 0;
+    this.lastMemorySave = 0;
+    this.SAVE_DEBOUNCE_MS = 5000; // Min 5s between saves
+    this.pendingState = false;
+    this.pendingMemory = false;
   }
 
   async connect() {
@@ -23,6 +28,53 @@ export class StateManager {
     this.state = this.loadState();
     this.memory = this.loadMemory();
     logger.info("State manager initialized");
+  }
+
+  // Debounced save — coalesces rapid writes
+  saveState() {
+    const now = Date.now();
+    if (now - this.lastStateSave < this.SAVE_DEBOUNCE_MS) {
+      if (!this.pendingState) {
+        this.pendingState = true;
+        setTimeout(() => this._flushState(), this.SAVE_DEBOUNCE_MS);
+      }
+      return;
+    }
+    this._flushState();
+  }
+
+  _flushState() {
+    try {
+      this.state.lastUpdated = new Date().toISOString();
+      fs.writeFileSync(STATE_FILE, JSON.stringify(this.state, null, 2));
+      this.lastStateSave = Date.now();
+      this.pendingState = false;
+    } catch (err) {
+      logger.error("Failed to save state.json:", err.message);
+    }
+  }
+
+  saveMemory() {
+    const now = Date.now();
+    if (now - this.lastMemorySave < this.SAVE_DEBOUNCE_MS) {
+      if (!this.pendingMemory) {
+        this.pendingMemory = true;
+        setTimeout(() => this._flushMemory(), this.SAVE_DEBOUNCE_MS);
+      }
+      return;
+    }
+    this._flushMemory();
+  }
+
+  _flushMemory() {
+    try {
+      this.memory.lastUpdated = new Date().toISOString();
+      fs.writeFileSync(MEMORY_FILE, JSON.stringify(this.memory, null, 2));
+      this.lastMemorySave = Date.now();
+      this.pendingMemory = false;
+    } catch (err) {
+      logger.error("Failed to save memory.json:", err.message);
+    }
   }
 
   loadState() {
@@ -256,6 +308,12 @@ export class StateManager {
     const after = this.state.recentEpisodes.length;
     logger.info(`Pruned episodes: ${before - after} removed, ${after} kept`);
     this.saveState();
+  }
+
+  // Flush pending saves (call on shutdown)
+  flushAll() {
+    if (this.pendingState) this._flushState();
+    if (this.pendingMemory) this._flushMemory();
   }
 }
 
